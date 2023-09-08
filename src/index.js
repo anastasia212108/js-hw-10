@@ -1,28 +1,67 @@
-console.log("gdg91")
-
 import SlimSelect from 'slim-select';
-import axios from "axios";
-axios.defaults.headers.common["x-api-key"] = "live_sTSvnapzqolgxvituXzzgrW1oJCeZaGpwl2qUFWTWxXnhTi5fesvG94qe1FAdv4j";
-import { fetchBreeds } from './cat-api';
+import Notiflix from 'notiflix';
+import { fetchBreeds, fetchCatByBreed } from './cat-api';
+
 
 const elements = {
     selectCat: document.querySelector(".breed-select"),
     loaderText: document.querySelector(".loader"),
     errorText: document.querySelector(".error"),
+    info: document.querySelector(".cat-info"),
 }
-elements.selectCat.addEventListener("click", fetchBreeds)
-// fetchBreeds("beng")
 
+fetchBreeds()
+    .then(data => { 
+        elements.selectCat.innerHTML = createList(data);
+        
+     })
+    .catch(error => {
+        Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!');
+    })
 
-// function createMarcup(arr) {
-//     return  arr.map(() => `<img  src="" alt="" />
-//       <div>
-//         <h1></h1>
-//         <h2></h2>
-//       </div>`).join("")     
-// }
+function createList(arr) {
+    return arr
+        .map(({ id, name }) => `<option value="${id}">${name}</option>`)
+        .join("");
+}
+     
+elements.selectCat.addEventListener("change", onClickId)
+function onClickId(evt) {
+    let valueId = evt.currentTarget.value;
+    elements.info.innerHTML = "";
+ elements.loaderText.style.display = 'block' ;
+    fetchCatByBreed(valueId)
+        .then(data => {
+            elements.info.innerHTML = createMarcup(data);
+                 if (data.length === 0) {
+             Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!');
+          }
+       
+        })
+       
+        .catch(error => { 
+                Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!');
+            
+})
+        .finally(() => { 
+           elements.loaderText.style.display = 'none' ;
+        })
 
+    // console.log(valueId)
+}
 
+function createMarcup(arr) {
+    return arr.map(({ url, breeds: { 0: { description, name, temperament } } }) =>
+        `<img  src="${url}" alt="${name} class="cat-img" width="400"/>
+      <div>
+        <h1>${name}</h1>
+        <h3>${description}</h3>
+        <h3>Temperament: ${temperament}</h3>
+      </div>`).join("")     
+}
+
+//  elements.loaderText.style.display = 'none' ;
+//             elements.errorText.style.display = 'none' ;
 
 //     new SlimSelect({
 //     select: '.breed-select'
